@@ -1,0 +1,17 @@
+{
+    "name": "P-Scalium Chat",
+      "short_name": "P-Scalium",
+        "description": "Application de messagerie P-Scalium Chat",
+          "start_url": "/",
+            "display": "standalone",
+              "background_color": "#F9FAFB",
+                "theme_color": "#3B82F6",
+                  "icons": [
+                      {
+                            "src": "/logo.svg",
+                                  "sizes": "512x512",
+                                        "type": "image/svg+xml",
+                                              "purpose": "any maskable"
+                                                  }
+                                                    ]
+                                                    }
