@@ -247,7 +247,7 @@ export default function Chat({ session, conversationId, onBack }) {
       { message_id: messageId, user_id: session.user.id },
       { onConflict: 'message_id,user_id' }
     )
-         }
+                          }
   const sendMessage = async (e) => {
     e.preventDefault()
     if (!newMessage.trim()) return
@@ -281,7 +281,7 @@ export default function Chat({ session, conversationId, onBack }) {
     const activeTypers = Object.entries(typingUsers).filter(([_, timestamp]) => now - timestamp < 3000)
     if (activeTypers.length === 0) return null
     const names = activeTypers.map(([userId]) => profiles[userId] || '...')
-    return names.join(', ') + (names.length > 1 ? ' sont en train d\'écrire...' : ' est en train d\'écrire...')
+    return names.join(', ') + (names.length > 1 ? ' sont en train d\'écrire' : ' est en train d\'écrire')
   }
 
   const canDeleteForEveryone = (msg) => {
@@ -508,7 +508,7 @@ export default function Chat({ session, conversationId, onBack }) {
         <img
           src={attachment.file_url}
           alt={attachment.file_name}
-          style={{ maxWidth: '100%', width: 220, borderRadius: 12, display: 'block' }}
+          style={{ maxWidth: '100%', width: 230, borderRadius: 14, display: 'block' }}
         />
       )
     }
@@ -518,14 +518,14 @@ export default function Chat({ session, conversationId, onBack }) {
         <video
           src={attachment.file_url}
           controls
-          style={{ maxWidth: '100%', width: 220, borderRadius: 12, display: 'block' }}
+          style={{ maxWidth: '100%', width: 230, borderRadius: 14, display: 'block' }}
         />
       )
     }
 
     if (attachment.file_type === 'audio') {
       return (
-        <audio src={attachment.file_url} controls style={{ display: 'block', maxWidth: '100%', width: 220 }} />
+        <audio src={attachment.file_url} controls style={{ display: 'block', maxWidth: '100%', width: 230 }} />
       )
     }
 
@@ -538,19 +538,18 @@ export default function Chat({ session, conversationId, onBack }) {
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          padding: '10px 14px',
+          padding: '11px 15px',
           background: colors.blueLight,
-          borderRadius: 10,
+          borderRadius: 12,
           textDecoration: 'none',
           color: colors.blueDark,
-          fontSize: 14
+          fontSize: 14,
+          fontWeight: 500
         }}
       >
         📄 {attachment.file_name}
       </a>
-    )
-  }
-  const handlePressStart = (msg) => {
+      const handlePressStart = (msg) => {
     const timer = setTimeout(() => {
       setContextMenuFor(msg)
     }, 500)
@@ -573,9 +572,9 @@ export default function Chat({ session, conversationId, onBack }) {
 
     if (msg.is_deleted) {
       return (
-        <div key={msg.id} style={{ textAlign: isMine ? 'right' : 'left', marginBottom: 14 }}>
+        <div key={msg.id} className="message-enter" style={{ textAlign: isMine ? 'right' : 'left', marginBottom: 16 }}>
           {!isMine && (
-            <div style={{ fontSize: 12, color: colors.textLight, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontSize: 12, color: colors.textLight, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
               {senderAvatar && (
                 <img src={senderAvatar} alt="avatar" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
               )}
@@ -586,8 +585,8 @@ export default function Chat({ session, conversationId, onBack }) {
             style={{
               display: 'inline-block',
               background: colors.border,
-              padding: '8px 14px',
-              borderRadius: 14,
+              padding: '9px 15px',
+              borderRadius: 16,
               fontStyle: 'italic',
               color: colors.textLight,
               fontSize: 14
@@ -600,9 +599,9 @@ export default function Chat({ session, conversationId, onBack }) {
     }
 
     return (
-      <div key={msg.id} style={{ textAlign: isMine ? 'right' : 'left', marginBottom: 14 }}>
+      <div key={msg.id} className="message-enter" style={{ textAlign: isMine ? 'right' : 'left', marginBottom: 16 }}>
         {!isMine && (
-          <div style={{ fontSize: 12, color: colors.textLight, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 12, color: colors.textLight, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
             {senderAvatar && (
               <img src={senderAvatar} alt="avatar" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
             )}
@@ -613,24 +612,24 @@ export default function Chat({ session, conversationId, onBack }) {
         {repliedMsg && (
           <div
             style={{
-              fontSize: 12,
+              fontSize: 12.5,
               color: colors.textLight,
               background: colors.blueLight,
               borderLeft: `3px solid ${colors.blue}`,
-              padding: '5px 10px',
-              borderRadius: 8,
-              marginBottom: 3,
+              padding: '6px 11px',
+              borderRadius: 10,
+              marginBottom: 4,
               display: 'inline-block',
               maxWidth: '80%'
             }}
           >
-            {profiles[repliedMsg.sender_id] || '...'}: {repliedMsg.is_deleted ? 'Message supprimé' : repliedMsg.content}
+            <b style={{ color: colors.blueDark }}>{profiles[repliedMsg.sender_id] || '...'}</b>: {repliedMsg.is_deleted ? 'Message supprimé' : repliedMsg.content}
           </div>
         )}
         <br />
 
         {attachment && (
-          <div style={{ marginBottom: 4 }}>
+          <div style={{ marginBottom: 5 }}>
             {renderAttachment(attachment)}
           </div>
         )}
@@ -646,13 +645,16 @@ export default function Chat({ session, conversationId, onBack }) {
             style={{
               display: 'inline-block',
               background: isMine ? colors.yellowLight : colors.white,
-              padding: '8px 14px',
-              borderRadius: 14,
+              padding: '10px 16px',
+              borderRadius: 18,
               cursor: 'pointer',
-              fontSize: 15,
+              fontSize: 15.5,
+              lineHeight: 1.45,
               color: colors.text,
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-              userSelect: 'none'
+              boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
+              userSelect: 'none',
+              wordBreak: 'break-word',
+              maxWidth: '85%'
             }}
           >
             {msg.content}
@@ -660,17 +662,19 @@ export default function Chat({ session, conversationId, onBack }) {
         )}
 
         {Object.keys(groupedReactions).length > 0 && (
-          <div style={{ fontSize: 13, marginTop: 3 }}>
+          <div style={{ fontSize: 13, marginTop: 4 }}>
             {Object.entries(groupedReactions).map(([emoji, count]) => (
               <span
                 key={emoji}
+                className="reaction-pop"
                 style={{
                   marginRight: 4,
                   background: colors.white,
-                  padding: '2px 6px',
-                  borderRadius: 10,
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
-                  display: 'inline-block'
+                  padding: '3px 8px',
+                  borderRadius: 12,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  display: 'inline-block',
+                  fontSize: 13
                 }}
               >
                 {emoji} {count > 1 ? count : ''}
@@ -680,7 +684,7 @@ export default function Chat({ session, conversationId, onBack }) {
         )}
 
         {isMine && (
-          <div style={{ fontSize: 11, color: read ? colors.blue : colors.textLight, marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: read ? colors.blue : colors.textLight, marginTop: 3, fontWeight: 500 }}>
             {read ? '✓✓ Lu' : '✓ Envoyé'}
           </div>
         )}
@@ -704,25 +708,26 @@ export default function Chat({ session, conversationId, onBack }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: colors.background, display: 'flex', flexDirection: 'column' }}>
+    <div className="page-slide" style={{ minHeight: '100vh', background: colors.background, display: 'flex', flexDirection: 'column' }}>
       <div
         style={{
           background: colors.blue,
-          padding: '14px 16px',
+          padding: '15px 18px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           color: colors.white,
           position: 'sticky',
           top: 0,
-          zIndex: 100
+          zIndex: 100,
+          boxShadow: '0 2px 8px rgba(59,130,246,0.25)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={onBack} style={{ border: 'none', background: 'none', color: colors.white, fontSize: 20, cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onBack} style={{ border: 'none', background: 'none', color: colors.white, fontSize: 22, cursor: 'pointer', padding: 0, lineHeight: 1 }}>
             ←
           </button>
-          <h2 style={{ margin: 0, fontSize: 18 }}>Conversation</h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: -0.2 }}>Conversation</h2>
         </div>
         <button onClick={() => setShowInfo(true)} style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer' }}>
           ℹ️
@@ -730,7 +735,7 @@ export default function Chat({ session, conversationId, onBack }) {
       </div>
 
       {conversationType === 'group' && isAdmin && (
-        <div style={{ padding: '10px 16px', background: colors.blueLight }}>
+        <div style={{ padding: '11px 18px', background: colors.blueLight }}>
           {showAddParticipant ? (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <input
@@ -738,17 +743,17 @@ export default function Chat({ session, conversationId, onBack }) {
                 placeholder="Nom d'utilisateur..."
                 value={newParticipantUsername}
                 onChange={(e) => setNewParticipantUsername(e.target.value)}
-                style={{ flex: '1 1 150px', padding: 8, borderRadius: 8, border: `1px solid ${colors.border}` }}
+                style={{ flex: '1 1 150px', padding: 9, borderRadius: 10, border: `1.5px solid ${colors.border}`, fontSize: 14 }}
               />
-              <button onClick={addParticipant} style={{ background: colors.blue, color: colors.white, border: 'none', borderRadius: 8, padding: '0 12px', cursor: 'pointer' }}>
+              <button onClick={addParticipant} style={{ background: colors.blue, color: colors.white, border: 'none', borderRadius: 10, padding: '0 14px', cursor: 'pointer', fontWeight: 600 }}>
                 Ajouter
               </button>
-              <button onClick={() => setShowAddParticipant(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setShowAddParticipant(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
             </div>
           ) : (
             <button
               onClick={() => setShowAddParticipant(true)}
-              style={{ background: 'none', border: 'none', color: colors.blueDark, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+              style={{ background: 'none', border: 'none', color: colors.blueDark, cursor: 'pointer', fontWeight: 700, fontSize: 13.5 }}
             >
               ➕ Ajouter un participant
             </button>
@@ -756,33 +761,35 @@ export default function Chat({ session, conversationId, onBack }) {
         </div>
       )}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: 16, maxWidth: 800, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 18, maxWidth: 800, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
         {messages.map((msg) => renderMessage(msg))}
         <div ref={bottomRef} />
       </div>
 
       {getTypingUsersText() && (
-        <div style={{ fontSize: 12, color: colors.textLight, fontStyle: 'italic', padding: '0 16px 8px' }}>
+        <div style={{ fontSize: 12.5, color: colors.textLight, fontStyle: 'italic', padding: '0 18px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
           {getTypingUsersText()}
+          <span className="typing-dot" style={{ fontSize: 16 }}>•</span>
         </div>
       )}
 
       {replyingTo && (
         <div
+          className="message-enter"
           style={{
             background: colors.blueLight,
             borderLeft: `3px solid ${colors.blue}`,
-            padding: '8px 16px',
+            padding: '9px 18px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: 13
+            fontSize: 13.5
           }}
         >
           <span style={{ color: colors.blueDark }}>
-            Réponse à {profiles[replyingTo.sender_id] || '...'}: {replyingTo.content}
+            Réponse à <b>{profiles[replyingTo.sender_id] || '...'}</b>: {replyingTo.content}
           </span>
-          <button onClick={() => setReplyingTo(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 16 }}>
+          <button onClick={() => setReplyingTo(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 17 }}>
             ✕
           </button>
         </div>
@@ -801,7 +808,7 @@ export default function Chat({ session, conversationId, onBack }) {
           display: 'flex',
           gap: 8,
           alignItems: 'center',
-          padding: 12,
+          padding: 13,
           background: colors.white,
           borderTop: `1px solid ${colors.border}`,
           position: 'sticky',
@@ -815,14 +822,14 @@ export default function Chat({ session, conversationId, onBack }) {
         <button
           type="button"
           onClick={() => document.getElementById('fileInput').click()}
-          style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer' }}
+          style={{ border: 'none', background: 'none', fontSize: 21, cursor: 'pointer' }}
         >
           📎
         </button>
         <button
           type="button"
           onClick={isRecording ? stopRecording : startRecording}
-          style={{ border: 'none', background: 'none', fontSize: 20, cursor: 'pointer', color: isRecording ? colors.danger : 'inherit' }}
+          style={{ border: 'none', background: 'none', fontSize: 21, cursor: 'pointer', color: isRecording ? colors.danger : 'inherit' }}
         >
           {isRecording ? '⏹️' : '🎤'}
         </button>
@@ -831,7 +838,7 @@ export default function Chat({ session, conversationId, onBack }) {
           value={newMessage}
           onChange={(e) => handleTyping(e.target.value)}
           placeholder="Écris un message..."
-          style={{ flex: 1, padding: 10, borderRadius: 20, border: `1px solid ${colors.border}`, outline: 'none', fontSize: 15 }}
+          style={{ flex: 1, padding: 11, borderRadius: 22, border: `1.5px solid ${colors.border}`, outline: 'none', fontSize: 15 }}
         />
         <button
           type="submit"
@@ -840,11 +847,12 @@ export default function Chat({ session, conversationId, onBack }) {
             color: colors.white,
             border: 'none',
             borderRadius: '50%',
-            width: 40,
-            height: 40,
+            width: 42,
+            height: 42,
             cursor: 'pointer',
-            fontSize: 16,
-            flexShrink: 0
+            fontSize: 17,
+            flexShrink: 0,
+            boxShadow: '0 2px 8px rgba(59,130,246,0.35)'
           }}
         >
           ➤
@@ -853,6 +861,7 @@ export default function Chat({ session, conversationId, onBack }) {
 
       {contextMenuFor && !showEmojiPicker && !deleteConfirmFor && (
         <div
+          className="modal-overlay-enter"
           onClick={() => setContextMenuFor(null)}
           style={{
             position: 'fixed',
@@ -865,25 +874,17 @@ export default function Chat({ session, conversationId, onBack }) {
           }}
         >
           <div
+            className="modal-content-enter"
             onClick={(e) => e.stopPropagation()}
-            style={{ background: colors.white, borderRadius: 14, padding: 8, width: 260, boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}
+            style={{ background: colors.white, borderRadius: 16, padding: 8, width: 260, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
           >
-            <button
-              onClick={() => { setReplyingTo(contextMenuFor); setContextMenuFor(null) }}
-              style={menuButtonStyle}
-            >
+            <button onClick={() => { setReplyingTo(contextMenuFor); setContextMenuFor(null) }} style={menuButtonStyle}>
               ↩️ Répondre
             </button>
-            <button
-              onClick={() => setShowEmojiPicker(true)}
-              style={menuButtonStyle}
-            >
+            <button onClick={() => setShowEmojiPicker(true)} style={menuButtonStyle}>
               😀 Réagir
             </button>
-            <button
-              onClick={() => { setDeleteConfirmFor(contextMenuFor); }}
-              style={{ ...menuButtonStyle, color: colors.danger }}
-            >
+            <button onClick={() => setDeleteConfirmFor(contextMenuFor)} style={{ ...menuButtonStyle, color: colors.danger }}>
               🗑️ Supprimer
             </button>
           </div>
@@ -892,27 +893,17 @@ export default function Chat({ session, conversationId, onBack }) {
 
       {showEmojiPicker && contextMenuFor && (
         <div
+          className="modal-overlay-enter"
           onClick={() => { setShowEmojiPicker(false); setContextMenuFor(null) }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: colors.overlay,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 200
-          }}
+          style={{ position: 'fixed', inset: 0, background: colors.overlay, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}
         >
           <div
+            className="modal-content-enter"
             onClick={(e) => e.stopPropagation()}
-            style={{ background: colors.white, borderRadius: 14, padding: 16, display: 'flex', gap: 10 }}
+            style={{ background: colors.white, borderRadius: 16, padding: 18, display: 'flex', gap: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
           >
             {EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => toggleReaction(contextMenuFor.id, emoji)}
-                style={{ fontSize: 26, border: 'none', background: 'none', cursor: 'pointer' }}
-              >
+              <button key={emoji} onClick={() => toggleReaction(contextMenuFor.id, emoji)} style={{ fontSize: 28, border: 'none', background: 'none', cursor: 'pointer' }}>
                 {emoji}
               </button>
             ))}
@@ -922,42 +913,27 @@ export default function Chat({ session, conversationId, onBack }) {
 
       {deleteConfirmFor && (
         <div
+          className="modal-overlay-enter"
           onClick={() => { setDeleteConfirmFor(null); setContextMenuFor(null) }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: colors.overlay,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 200
-          }}
+          style={{ position: 'fixed', inset: 0, background: colors.overlay, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}
         >
           <div
+            className="modal-content-enter"
             onClick={(e) => e.stopPropagation()}
-            style={{ background: colors.white, borderRadius: 14, padding: 20, width: 280 }}
+            style={{ background: colors.white, borderRadius: 16, padding: 22, width: 290, boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
           >
-            <p style={{ margin: '0 0 16px', color: colors.text, fontWeight: 600, fontSize: 15 }}>
+            <p style={{ margin: '0 0 18px', color: colors.text, fontWeight: 700, fontSize: 15.5 }}>
               Supprimer ce message ?
             </p>
-            <button
-              onClick={() => deleteForMe(deleteConfirmFor.id)}
-              style={{ ...menuButtonStyle, textAlign: 'left' }}
-            >
+            <button onClick={() => deleteForMe(deleteConfirmFor.id)} style={{ ...menuButtonStyle, textAlign: 'left' }}>
               Supprimer pour moi
             </button>
             {canDeleteForEveryone(deleteConfirmFor) && (
-              <button
-                onClick={() => deleteForEveryone(deleteConfirmFor.id)}
-                style={{ ...menuButtonStyle, textAlign: 'left', color: colors.danger }}
-              >
+              <button onClick={() => deleteForEveryone(deleteConfirmFor.id)} style={{ ...menuButtonStyle, textAlign: 'left', color: colors.danger }}>
                 Supprimer pour tout le monde
               </button>
             )}
-            <button
-              onClick={() => { setDeleteConfirmFor(null); setContextMenuFor(null) }}
-              style={{ ...menuButtonStyle, textAlign: 'left', color: colors.textLight }}
-            >
+            <button onClick={() => { setDeleteConfirmFor(null); setContextMenuFor(null) }} style={{ ...menuButtonStyle, textAlign: 'left', color: colors.textLight }}>
               Annuler
             </button>
           </div>
@@ -970,11 +946,14 @@ export default function Chat({ session, conversationId, onBack }) {
 const menuButtonStyle = {
   display: 'block',
   width: '100%',
-  padding: '12px 16px',
+  padding: '13px 16px',
   border: 'none',
   background: 'none',
   cursor: 'pointer',
   fontSize: 15,
-  borderRadius: 8,
-  color: '#1F2937'
-            }
+  borderRadius: 10,
+  color: '#1F2937',
+  fontWeight: 500
+                    }
+    )
+    }
