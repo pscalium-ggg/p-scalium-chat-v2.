@@ -247,7 +247,8 @@ export default function Chat({ session, conversationId, onBack }) {
       { message_id: messageId, user_id: session.user.id },
       { onConflict: 'message_id,user_id' }
     )
-                          }
+  }
+
   const sendMessage = async (e) => {
     e.preventDefault()
     if (!newMessage.trim()) return
@@ -549,7 +550,10 @@ export default function Chat({ session, conversationId, onBack }) {
       >
         📄 {attachment.file_name}
       </a>
-      const handlePressStart = (msg) => {
+    )
+  }
+
+  const handlePressStart = (msg) => {
     const timer = setTimeout(() => {
       setContextMenuFor(msg)
     }, 500)
@@ -802,6 +806,7 @@ export default function Chat({ session, conversationId, onBack }) {
         onChange={handleFileSelect}
         style={{ display: 'none' }}
       />
+
       <form
         onSubmit={sendMessage}
         style={{
@@ -826,6 +831,7 @@ export default function Chat({ session, conversationId, onBack }) {
         >
           📎
         </button>
+
         <button
           type="button"
           onClick={isRecording ? stopRecording : startRecording}
@@ -833,6 +839,7 @@ export default function Chat({ session, conversationId, onBack }) {
         >
           {isRecording ? '⏹️' : '🎤'}
         </button>
+
         <input
           type="text"
           value={newMessage}
@@ -840,6 +847,7 @@ export default function Chat({ session, conversationId, onBack }) {
           placeholder="Écris un message..."
           style={{ flex: 1, padding: 11, borderRadius: 22, border: `1.5px solid ${colors.border}`, outline: 'none', fontSize: 15 }}
         />
+
         <button
           type="submit"
           style={{
@@ -881,9 +889,11 @@ export default function Chat({ session, conversationId, onBack }) {
             <button onClick={() => { setReplyingTo(contextMenuFor); setContextMenuFor(null) }} style={menuButtonStyle}>
               ↩️ Répondre
             </button>
+
             <button onClick={() => setShowEmojiPicker(true)} style={menuButtonStyle}>
               😀 Réagir
             </button>
+
             <button onClick={() => setDeleteConfirmFor(contextMenuFor)} style={{ ...menuButtonStyle, color: colors.danger }}>
               🗑️ Supprimer
             </button>
@@ -925,14 +935,17 @@ export default function Chat({ session, conversationId, onBack }) {
             <p style={{ margin: '0 0 18px', color: colors.text, fontWeight: 700, fontSize: 15.5 }}>
               Supprimer ce message ?
             </p>
+
             <button onClick={() => deleteForMe(deleteConfirmFor.id)} style={{ ...menuButtonStyle, textAlign: 'left' }}>
               Supprimer pour moi
             </button>
+
             {canDeleteForEveryone(deleteConfirmFor) && (
               <button onClick={() => deleteForEveryone(deleteConfirmFor.id)} style={{ ...menuButtonStyle, textAlign: 'left', color: colors.danger }}>
                 Supprimer pour tout le monde
               </button>
             )}
+
             <button onClick={() => { setDeleteConfirmFor(null); setContextMenuFor(null) }} style={{ ...menuButtonStyle, textAlign: 'left', color: colors.textLight }}>
               Annuler
             </button>
@@ -954,6 +967,4 @@ const menuButtonStyle = {
   borderRadius: 10,
   color: '#1F2937',
   fontWeight: 500
-                    }
-    )
-    }
+}
