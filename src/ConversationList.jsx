@@ -5,36 +5,466 @@ import { colors } from './colors'
 
 export default function ConversationList({ session, onSelectConversation }) {
   const [conversations, setConversations] = useState([])
-    const [searchUsername, setSearchUsername] = useState('')
-      const [loading, setLoading] = useState(true)
-        const [onlineUsers, setOnlineUsers] = useState({})
-          const [showCreateGroup, setShowCreateGroup] = useState(false)
-            const [contacts, setContacts] = useState([])
-              const [avatars, setAvatars] = useState({})
-                const [unreadCounts, setUnreadCounts] = useState({})
+  const [searchUsername, setSearchUsername] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [onlineUsers, setOnlineUsers] = useState({})
+  const [showCreateGroup, setShowCreateGroup] = useState(false)
+  const [contacts, setContacts] = useState([])
+  const [avatars, setAvatars] = useState({})
+  const [unreadCounts, setUnreadCounts] = useState({})
 
-                  useEffect(() => {
-                      fetchConversations()
+  useEffect(() => {
+    fetchConversations()
 
-                          const presenceChannel = supabase.channel('online-users', {
-                                config: { presence: { key: session.user.id } }
-                                    })
+    const presenceChannel = supabase.channel('online-users', {
+      config: { presence: { key: session.user.id } }
+    })
 
-                                        presenceChannel
-                                              .on('presence', { event: 'sync' }, () => {
-                                                      const state = presenceChannel.presenceState()
-                                                              setOnlineUsers(state)
-                                                                    })
-                                                                          .subscribe(async (status) => {
-                                                                                  if (status === 'SUBSCRIBED') {
-                                                                                            await presenceChannel.track({ online_at: new Date().toISOString() })
-                                                                                                    }
-                                                                                                          })
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState()
+        setOnlineUsers(state)
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({ online_at: new Date().toISOString() })
+        }
+      })
 
-                                                                                                              const messagesChannel = supabase
-                                                                                                                    .channel('unread-tracker')
-                                                                                                                          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
-                                                                                                                                  fetchConversations()
+    const messagesChannel = supabase
+      .channel('unread-tracker')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        fetchConversations()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(presenceChannel)
+      supabase.removeChannel(messagesChannel)
+    }
+  }, [])
+
+  const fetchConversations = async () => {
+    if (conversations.length === 0) {
+      setLoading(true)
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data: myParticipations, error: partError } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id')
+      .eq('user_id', user.id)
+
+    if (partError) {
+      alert('Erreur : ' + partError.message)
+      setLoading(false)
+      return
+    }
+
+    const conversationIds = myParticipations.map((p) => p.conversation_id)
+
+    if (conversationIds.length === 0) {
+      setConversations([])
+      setLoading(false)
+      return
+    }
+
+    const { data: convData, error: convError } = await supabase
+      .from('conversations')
+      .select('id, type, name, created_at')
+      .in('id', conversationIds)
+      .order('created_at', { ascending: false })
+
+    if (convError) {
+      alert('Erreur : ' + convError.message)
+      setLoading(false)
+      return
+    }
+
+    const { data: allParticipants, error: allPartError } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id, user_id')
+      .in('conversation_id', conversationIds)
+
+    if (allPartError || !allParticipants) {
+      setConversations(convData)
+      setLoading(false)
+      return
+    }
+
+    const otherUserIds = allParticipants
+      .filter((p) => p.user_id !== user.id)
+      .map((p) => p.user_id)
+
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, avatar_url')
+      .in('id', otherUserIds)
+
+    const profilesMap = {}
+    const avatarsMap = {}
+    if (profilesData) {
+      profilesData.forEach((p) => {
+        profilesMap[p.id] = p.display_name || p.username
+        avatarsMap[p.id] = p.avatar_url
+      })
+    }
+
+    const enrichedConversations = convData.map((conv) => {
+      if (conv.type === 'group') {
+        return { ...conv, otherUserId: null, otherUserName: null }
+      }
+
+      const otherParticipant = allParticipants.find(
+        (p) => p.conversation_id === conv.id && p.user_id !== user.id
+      )
+      const otherUserId = otherParticipant ? otherParticipant.user_id : null
+      const otherUserName = otherUserId ? profilesMap[otherUserId] : null
+
+      return {
+        ...conv,
+        otherUserId,
+        otherUserName
+      }
+    })
+
+    setConversations(enrichedConversations)
+    setAvatars(avatarsMap)
+
+    const { data: allMessages } = await supabase
+      .from('messages')
+      .select('id, conversation_id, sender_id')
+      .in('conversation_id', conversationIds)
+      .neq('sender_id', user.id)
+
+    if (allMessages && allMessages.length > 0) {
+      const messageIds = allMessages.map((m) => m.id)
+      const { data: readMessages } = await supabase
+        .from('message_reads')
+        .select('message_id')
+        .eq('user_id', user.id)
+        .in('message_id', messageIds)
+
+      const readIds = new Set((readMessages || []).map((r) => r.message_id))
+
+      const counts = {}
+      allMessages.forEach((msg) => {
+        if (!readIds.has(msg.id)) {
+          counts[msg.conversation_id] = (counts[msg.conversation_id] || 0) + 1
+        }
+      })
+      setUnreadCounts(counts)
+
+      const total = Object.values(counts).reduce((sum, c) => sum + c, 0)
+      document.title = total > 0 ? `(${total}) P-Scalium Chat` : 'P-Scalium Chat'
+    }
+
+    setLoading(false)
+  }
+
+  const findExistingDirectConversation = async (userId, targetUserId) => {
+    const { data: myConvs } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id')
+      .eq('user_id', userId)
+
+    if (!myConvs || myConvs.length === 0) return null
+
+    const myConvIds = myConvs.map((c) => c.conversation_id)
+
+    const { data: theirConvs } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id')
+      .eq('user_id', targetUserId)
+      .in('conversation_id', myConvIds)
+
+    if (!theirConvs || theirConvs.length === 0) return null
+
+    const sharedConvIds = theirConvs.map((c) => c.conversation_id)
+
+    const { data: directConvs } = await supabase
+      .from('conversations')
+      .select('id')
+      .in('id', sharedConvIds)
+      .eq('type', 'direct')
+
+    if (directConvs && directConvs.length > 0) {
+      return directConvs[0].id
+    }
+
+    return null
+  }
+
+  const startConversationWith = async () => {
+    if (!searchUsername.trim()) return
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      alert('Erreur auth : ' + (authError ? authError.message : 'utilisateur non trouvé'))
+      return
+    }
+
+    const { data: targetUser, error: userError } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .eq('username', searchUsername.trim())
+      .single()
+
+    if (userError) {
+      alert('Erreur recherche : ' + userError.message)
+      return
+    }
+
+    if (!targetUser) {
+      alert('Utilisateur introuvable')
+      return
+    }
+
+    if (targetUser.id === user.id) {
+      alert('Tu ne peux pas démarrer une conversation avec toi-même')
+      return
+    }
+
+    const existingConvId = await findExistingDirectConversation(user.id, targetUser.id)
+
+    if (existingConvId) {
+      setSearchUsername('')
+      onSelectConversation(existingConvId)
+      return
+    }
+
+    const { data: newConv, error: convError } = await supabase
+      .from('conversations')
+      .insert({ type: 'direct', created_by: user.id })
+      .select()
+      .single()
+
+    if (convError) {
+      alert('Erreur création conv : ' + convError.message)
+      return
+    }
+
+    const { error: partError } = await supabase.from('conversation_participants').insert([
+      { conversation_id: newConv.id, user_id: user.id },
+      { conversation_id: newConv.id, user_id: targetUser.id }
+    ])
+
+    if (partError) {
+      alert('Erreur participants : ' + partError.message)
+      return
+    }
+
+    setSearchUsername('')
+    fetchConversations()
+    onSelectConversation(newConv.id)
+  }
+
+  const leaveConversation = async (conversationId, e) => {
+    e.stopPropagation()
+
+    const confirmed = window.confirm('Voulez-vous vraiment supprimer cette conversation ?')
+    if (!confirmed) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { error } = await supabase
+      .from('conversation_participants')
+      .delete()
+      .eq('conversation_id', conversationId)
+      .eq('user_id', user.id)
+
+    if (error) {
+      alert('Erreur suppression : ' + error.message)
+    } else {
+      fetchConversations()
+    }
+  }
+
+  const isUserOnline = (userId) => {
+    return Object.keys(onlineUsers).includes(userId)
+  }
+
+  const getMyContacts = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data: myParticipations } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id')
+      .eq('user_id', user.id)
+
+    if (!myParticipations || myParticipations.length === 0) return []
+
+    const conversationIds = myParticipations.map((p) => p.conversation_id)
+
+    const { data: allParticipants } = await supabase
+      .from('conversation_participants')
+      .select('user_id')
+      .in('conversation_id', conversationIds)
+      .neq('user_id', user.id)
+
+    if (!allParticipants) return []
+
+    const uniqueUserIds = [...new Set(allParticipants.map((p) => p.user_id))]
+
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('id, username, display_name')
+      .in('id', uniqueUserIds)
+
+    return profilesData || []
+  }
+
+  const openCreateGroup = async () => {
+    const myContacts = await getMyContacts()
+    setContacts(myContacts)
+    setShowCreateGroup(true)
+  }
+
+  if (showCreateGroup) {
+    return (
+      <CreateGroup
+        session={session}
+        contacts={contacts}
+        onGroupCreated={(newConvId) => {
+          setShowCreateGroup(false)
+          fetchConversations()
+          onSelectConversation(newConvId)
+        }}
+        onCancel={() => setShowCreateGroup(false)}
+      />
+    )
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: colors.background }}>
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 16px 16px' }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 10, flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Nom d'utilisateur..."
+            value={searchUsername}
+            onChange={(e) => setSearchUsername(e.target.value)}
+            style={{ flex: '1 1 200px', padding: 10, borderRadius: 8, border: `1px solid ${colors.border}`, fontSize: 15 }}
+          />
+          <button
+            onClick={startConversationWith}
+            style={{ padding: '10px 14px', background: colors.blue, color: colors.white, border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 500 }}
+          >
+            Nouveau
+          </button>
+        </div>
+
+        <button
+          onClick={openCreateGroup}
+          style={{
+            width: '100%',
+            padding: 10,
+            marginBottom: 20,
+            background: colors.yellowLight,
+            color: colors.blueDark,
+            border: `1px solid ${colors.yellow}`,
+            borderRadius: 8,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          👥 Nouveau groupe
+        </button>
+
+        {loading ? (
+          <p style={{ textAlign: 'center', color: colors.textLight }}>Chargement...</p>
+        ) : conversations.length === 0 ? (
+          <p style={{ textAlign: 'center', color: colors.textLight }}>Aucune conversation pour l'instant.</p>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {conversations.map((conv) => (
+              <li
+                key={conv.id}
+                onClick={() => onSelectConversation(conv.id)}
+                style={{
+                  padding: 14,
+                  background: colors.white,
+                  borderRadius: 10,
+                  marginBottom: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                  flexWrap: 'wrap',
+                  gap: 8
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  {conv.type === 'direct' && conv.otherUserId && avatars[conv.otherUserId] && (
+                    <img
+                      src={avatars[conv.otherUserId]}
+                      alt="avatar"
+                      style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                    />
+                  )}
+                  {conv.type === 'group' && (
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                      👥
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    {conv.type === 'direct' && conv.otherUserId && (
+                      <span
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: isUserOnline(conv.otherUserId) ? '#22C55E' : '#D1D5DB',
+                          display: 'inline-block',
+                          flexShrink: 0
+                        }}
+                      />
+                    )}
+                    <span style={{ color: colors.text, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {conv.type === 'group' ? conv.name : conv.otherUserName || 'Conversation privée'}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  {unreadCounts[conv.id] > 0 && (
+                    <span
+                      style={{
+                        background: colors.yellowVivid,
+                        color: colors.white,
+                        borderRadius: '50%',
+                        minWidth: 20,
+                        height: 20,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: '0 4px'
+                      }}
+                    >
+                      {unreadCounts[conv.id]}
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => leaveConversation(conv.id, e)}
+                    style={{ border: 'none', background: 'none', color: colors.danger, cursor: 'pointer', fontSize: 16 }}
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+                  }                                                                                                                                  fetchConversations()
                                                                                                                                         })
                                                                                                                                               .subscribe()
 
