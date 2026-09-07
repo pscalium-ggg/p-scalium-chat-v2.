@@ -335,10 +335,9 @@ export default function ConversationList({ session, onSelectConversation }) {
         onCancel={() => setShowCreateGroup(false)}
       />
     )
-  }
-
+      }
   return (
-    <div style={{ minHeight: '100vh', background: colors.background }}>
+    <div className="screen-enter" style={{ minHeight: '100vh', background: colors.background }}>
       <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 16px 16px' }}>
         <div style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 10, flexWrap: 'wrap' }}>
           <input
@@ -346,11 +345,11 @@ export default function ConversationList({ session, onSelectConversation }) {
             placeholder="Nom d'utilisateur..."
             value={searchUsername}
             onChange={(e) => setSearchUsername(e.target.value)}
-            style={{ flex: '1 1 200px', padding: 10, borderRadius: 8, border: `1px solid ${colors.border}`, fontSize: 15 }}
+            style={{ flex: '1 1 200px', padding: 11, borderRadius: 10, border: `1.5px solid ${colors.border}`, fontSize: 15, color: colors.text }}
           />
           <button
             onClick={startConversationWith}
-            style={{ padding: '10px 14px', background: colors.blue, color: colors.white, border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 500 }}
+            style={{ padding: '11px 16px', background: colors.blue, color: colors.white, border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
           >
             Nouveau
           </button>
@@ -360,102 +359,131 @@ export default function ConversationList({ session, onSelectConversation }) {
           onClick={openCreateGroup}
           style={{
             width: '100%',
-            padding: 10,
-            marginBottom: 20,
+            padding: 12,
+            marginBottom: 22,
             background: colors.yellowLight,
             color: colors.blueDark,
-            border: `1px solid ${colors.yellow}`,
-            borderRadius: 8,
-            fontWeight: 600,
+            border: `1.5px solid ${colors.yellow}`,
+            borderRadius: 10,
+            fontWeight: 700,
             cursor: 'pointer',
-            fontSize: 14
+            fontSize: 14.5
           }}
         >
           👥 Nouveau groupe
         </button>
 
         {loading ? (
-          <p style={{ textAlign: 'center', color: colors.textLight }}>Chargement...</p>
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <div
+              className="spinner"
+              style={{
+                width: 28,
+                height: 28,
+                border: `3px solid ${colors.blueLight}`,
+                borderTopColor: colors.blue,
+                borderRadius: '50%',
+                margin: '0 auto'
+              }}
+            />
+          </div>
         ) : conversations.length === 0 ? (
-          <p style={{ textAlign: 'center', color: colors.textLight }}>Aucune conversation pour l'instant.</p>
+          <p style={{ textAlign: 'center', color: colors.textLight, marginTop: 40, fontSize: 14.5 }}>
+            Aucune conversation pour l'instant.
+          </p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {conversations.map((conv) => (
+            {conversations.map((conv, index) => (
               <li
                 key={conv.id}
+                className="list-item-enter"
+                style={{ animationDelay: `${index * 0.04}s` }}
                 onClick={() => onSelectConversation(conv.id)}
-                style={{
-                  padding: 14,
-                  background: colors.white,
-                  borderRadius: 10,
-                  marginBottom: 8,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                  flexWrap: 'wrap',
-                  gap: 8
-                }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                  {conv.type === 'direct' && conv.otherUserId && avatars[conv.otherUserId] && (
-                    <img
-                      src={avatars[conv.otherUserId]}
-                      alt="avatar"
-                      style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-                    />
-                  )}
-                  {conv.type === 'group' && (
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                      👥
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                    {conv.type === 'direct' && conv.otherUserId && (
-                      <span
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: isUserOnline(conv.otherUserId) ? '#22C55E' : '#D1D5DB',
-                          display: 'inline-block',
-                          flexShrink: 0
-                        }}
+                <div
+                  style={{
+                    padding: 14,
+                    background: colors.white,
+                    borderRadius: 12,
+                    marginBottom: 8,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    {conv.type === 'direct' && conv.otherUserId && avatars[conv.otherUserId] && (
+                      <img
+                        src={avatars[conv.otherUserId]}
+                        alt="avatar"
+                        style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                       />
                     )}
-                    <span style={{ color: colors.text, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.type === 'group' ? conv.name : conv.otherUserName || 'Conversation privée'}
-                    </span>
+                    {conv.type === 'direct' && conv.otherUserId && !avatars[conv.otherUserId] && (
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: colors.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                        👤
+                      </div>
+                    )}
+                    {conv.type === 'group' && (
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: colors.yellowLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                        👥
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                      {conv.type === 'direct' && conv.otherUserId && (
+                        <span
+                          style={{
+                            width: 9,
+                            height: 9,
+                            borderRadius: '50%',
+                            backgroundColor: isUserOnline(conv.otherUserId) ? '#22C55E' : '#D1D5DB',
+                            display: 'inline-block',
+                            flexShrink: 0,
+                            boxShadow: isUserOnline(conv.otherUserId) ? '0 0 0 3px rgba(34,197,94,0.2)' : 'none'
+                          }}
+                        />
+                      )}
+                      <span style={{ color: colors.text, fontWeight: 600, fontSize: 15.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {conv.type === 'group' ? conv.name : conv.otherUserName || 'Conversation privée'}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                  {unreadCounts[conv.id] > 0 && (
-                    <span
-                      style={{
-                        background: colors.yellowVivid,
-                        color: colors.white,
-                        borderRadius: '50%',
-                        minWidth: 20,
-                        height: 20,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '0 4px'
-                      }}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                    {unreadCounts[conv.id] > 0 && (
+                      <span
+                        className="reaction-pop"
+                        style={{
+                          background: colors.yellowVivid,
+                          color: colors.white,
+                          borderRadius: '50%',
+                          minWidth: 21,
+                          height: 21,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: '0 4px'
+                        }}
+                      >
+                        {unreadCounts[conv.id]}
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => leaveConversation(conv.id, e)}
+                      style={{ border: 'none', background: 'none', color: colors.danger, cursor: 'pointer', fontSize: 16, opacity: 0.6 }}
                     >
-                      {unreadCounts[conv.id]}
-                    </span>
-                  )}
-                  <button
-                    onClick={(e) => leaveConversation(conv.id, e)}
-                    style={{ border: 'none', background: 'none', color: colors.danger, cursor: 'pointer', fontSize: 16 }}
-                  >
-                    🗑️
-                  </button>
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}
