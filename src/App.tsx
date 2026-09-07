@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
 import Auth from './Auth'
 import Chat from './Chat'
@@ -9,9 +10,9 @@ import { colors } from './colors'
 import './App.css'
 
 function App() {
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeConversationId, setActiveConversationId] = useState(null)
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [showProfile, setShowProfile] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
@@ -98,7 +99,7 @@ function App() {
       ) : (
         <ConversationList
           session={session}
-          onSelectConversation={(id) => setActiveConversationId(id)}
+          onSelectConversation={(id: string) => setActiveConversationId(id)}
         />
       )}
     </div>
