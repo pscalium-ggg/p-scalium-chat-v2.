@@ -132,43 +132,43 @@ export default function ConversationInfo({ session, conversationId, conversation
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.background }}>
-        <p style={{ color: colors.textLight }}>Chargement...</p>
+        <div className="spinner" style={{ width: 28, height: 28, border: `3px solid ${colors.blueLight}`, borderTopColor: colors.blue, borderRadius: '50%' }} />
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: colors.background }}>
-      <div style={{ background: colors.blue, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, color: colors.white, position: 'sticky', top: 0, zIndex: 100 }}>
-        <button onClick={onBack} style={{ border: 'none', background: 'none', color: colors.white, fontSize: 20, cursor: 'pointer' }}>
+    <div className="screen-enter" style={{ minHeight: '100vh', background: colors.background }}>
+      <div style={{ background: colors.blue, padding: '15px 18px', display: 'flex', alignItems: 'center', gap: 12, color: colors.white, position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 8px rgba(59,130,246,0.25)' }}>
+        <button onClick={onBack} style={{ border: 'none', background: 'none', color: colors.white, fontSize: 22, cursor: 'pointer', padding: 0, lineHeight: 1 }}>
           ←
         </button>
-        <h2 style={{ margin: 0, fontSize: 18 }}>Infos</h2>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: -0.2 }}>Infos</h2>
       </div>
 
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: 20 }}>
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: 22 }}>
         {conversationType === 'group' && (
-          <div style={{ marginBottom: 24, background: colors.white, borderRadius: 10, padding: 14 }}>
+          <div className="modal-content-enter" style={{ marginBottom: 26, background: colors.white, borderRadius: 14, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             {editingName ? (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <input
                   type="text"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
-                  style={{ flex: '1 1 150px', padding: 8, borderRadius: 8, border: `1px solid ${colors.border}` }}
+                  style={{ flex: '1 1 150px', padding: 9, borderRadius: 10, border: `1.5px solid ${colors.border}`, fontSize: 15 }}
                 />
-                <button onClick={updateGroupName} style={{ background: colors.blue, color: colors.white, border: 'none', borderRadius: 8, padding: '0 12px', cursor: 'pointer' }}>
+                <button onClick={updateGroupName} style={{ background: colors.blue, color: colors.white, border: 'none', borderRadius: 10, padding: '0 14px', cursor: 'pointer', fontWeight: 600 }}>
                   ✓
                 </button>
-                <button onClick={() => setEditingName(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <button onClick={() => setEditingName(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>
                   ✕
                 </button>
               </div>
             ) : (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, color: colors.text }}>{groupName}</h3>
+                <h3 style={{ margin: 0, color: colors.text, fontSize: 17, fontWeight: 700 }}>{groupName}</h3>
                 {isAdmin && (
-                  <button onClick={() => setEditingName(true)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 16 }}>
+                  <button onClick={() => setEditingName(true)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 17 }}>
                     ✏️
                   </button>
                 )}
@@ -177,19 +177,21 @@ export default function ConversationInfo({ session, conversationId, conversation
           </div>
         )}
 
-        <h4 style={{ color: colors.textLight, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+        <h4 style={{ color: colors.textLight, fontSize: 12.5, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: 700, marginBottom: 10 }}>
           Participants ({participants.length})
         </h4>
 
         <ul style={{ listStyle: 'none', padding: 0 }}>
-          {participants.map((p) => (
+          {participants.map((p, index) => (
             <li
               key={p.id}
+              className="list-item-enter"
               style={{
-                padding: 12,
+                animationDelay: `${index * 0.04}s`,
+                padding: 13,
                 background: colors.white,
-                borderRadius: 10,
-                marginBottom: 6,
+                borderRadius: 12,
+                marginBottom: 7,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -198,24 +200,24 @@ export default function ConversationInfo({ session, conversationId, conversation
                 gap: 8
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10, color: colors.text, minWidth: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 11, color: colors.text, minWidth: 0 }}>
                 {p.avatar_url ? (
-                  <img src={p.avatar_url} alt="avatar" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                  <img src={p.avatar_url} alt="avatar" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: colors.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: colors.blueLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
                     👤
                   </div>
                 )}
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500, fontSize: 15 }}>
                   {p.display_name || p.username}{p.id === session.user.id ? ' (Toi)' : ''}
-                  {p.is_admin && <span style={{ color: colors.blue, fontSize: 12, fontWeight: 600 }}> · Admin</span>}
+                  {p.is_admin && <span style={{ color: colors.blue, fontSize: 11.5, fontWeight: 700 }}> · Admin</span>}
                 </span>
               </span>
               {conversationType === 'group' && isAdmin && p.id !== session.user.id && (
-                <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
                   <button
                     onClick={() => toggleAdmin(p.id, p.display_name || p.username, p.is_admin)}
-                    style={{ border: 'none', background: 'none', color: colors.blue, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                    style={{ border: 'none', background: 'none', color: colors.blue, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
                   >
                     {p.is_admin ? 'Retirer admin' : 'Rendre admin'}
                   </button>
@@ -236,14 +238,15 @@ export default function ConversationInfo({ session, conversationId, conversation
             onClick={leaveGroup}
             style={{
               width: '100%',
-              padding: 12,
-              marginTop: 20,
+              padding: 13,
+              marginTop: 22,
               background: '#FEE2E2',
               color: colors.danger,
-              border: `1px solid ${colors.danger}`,
-              borderRadius: 10,
-              fontWeight: 600,
-              cursor: 'pointer'
+              border: `1.5px solid ${colors.danger}`,
+              borderRadius: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontSize: 14.5
             }}
           >
             Quitter le groupe
@@ -252,4 +255,4 @@ export default function ConversationInfo({ session, conversationId, conversation
       </div>
     </div>
   )
-                                                          }
+        }
